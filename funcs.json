@@ -1,0 +1,134 @@
+{
+    "0": {
+        "func": [
+            "Non Editable"
+        ],
+        "idx": 0,
+        "name": "Clean"
+    },
+    "1": {
+        "func": [
+            "Fdbk",
+            "Depth",
+            "Speed"
+        ],
+        "idx": 1,
+        "name": "Chorus"
+    },
+    "2": {
+        "func": [
+            "Fdbk",
+            "Depth",
+            "Speed"
+        ],
+        "idx": 2,
+        "name": "Warble Chorus"
+    },
+    "3": {
+        "func": [
+            "Spd",
+            "Shape",
+            "Depth"
+        ],
+        "idx": 3,
+        "name": "Tremolo"
+    },
+    "4": {
+        "func": [
+            "Depth",
+            "Speed"
+        ],
+        "idx": 4,
+        "name": "Vibrato"
+    },
+    "5": {
+        "func": [
+            "MaxF",
+            "MinF",
+            "Speed"
+        ],
+        "idx": 5,
+        "name": "Wah"
+    },
+    "6": {
+        "func": [
+            "Pitch"
+        ],
+        "idx": 6,
+        "name": "Ring Modulator"
+    },
+    "7": {
+        "func": [
+            "MaxF",
+            "MinF",
+            "Speed"
+        ],
+        "idx": 7,
+        "name": "Low Fuzz Wah"
+    },
+    "8": {
+        "func": [
+            "MaxF",
+            "MinF",
+            "Speed"
+        ],
+        "idx": 8,
+        "name": "Med Fuzz Wah"
+    },
+    "9": {
+        "func": [
+            "MaxF",
+            "MinF",
+            "Speed"
+        ],
+        "idx": 9,
+        "name": "Hi Fuzz Wah"
+    },
+    "10": {
+        "func": [
+            "Pitch",
+            "Boost"
+        ],
+        "idx": 10,
+        "name": "Ring Mod Fuzz"
+    },
+    "11": {
+        "func": [
+            "Boost",
+            "Tone"
+        ],
+        "idx": 11,
+        "name": "Fuzz"
+    },
+    "12": {
+        "func": [
+            "Gain",
+            "Tone"
+        ],
+        "idx": 12,
+        "name": "Subtractive OD"
+    },
+    "13": {
+        "func": [
+            "Gain"
+        ],
+        "idx": 13,
+        "name": "Tube Screamer"
+    },
+    "14": {
+        "func": [
+            "DlyTime",
+            " Repeats"
+        ],
+        "idx": 14,
+        "name": "Digital Delay"
+    },
+    "15": {
+        "func": [
+            "DlyTime",
+            " Repeats"
+        ],
+        "idx": 15,
+        "name": "Tape Echo"
+    }
+}

@@ -9,6 +9,7 @@ import os
 import sys
 import logging
 import subprocess
+import json
 
 from time import *
 
@@ -16,69 +17,91 @@ logging.basicConfig(level=logging.DEBUG, stream=sys.stdout, format='[%(name)s] %
 logger = logging.getLogger(__name__)
 
 
-def readadc(adcnum):
-# read SPI data from MCP3008 chip, 8 possible adc's (0 thru 7)
-    if adcnum > 7 or adcnum < 0:
-        return -1
-    r = spi.xfer2([1, 8 + adcnum << 4, 0])
-    adcout = ((r[1] & 3) << 8) + r[2]
-    return adcout
+cfg_f = 'funcs.json'
+
+
+class PureData:
+    def __init__(self, do_start = True, port = 5000, suffix = ''):
+        self.bin = 'pd'
+        self.opt_l = ['nogui']
+        self.script = 'server.pd'
+        self.sndMsg = " | pdsend {} localhost {}".format(port, suffix)
+        if do_start:
+            self.start()
+
+    def start(self):
+        logger.debug('* Starting puredata')
+        cmd = "{}{} {} &".format(self.bin, " -".join([''] + self.opt_l), self.script)
+        # logger.debug('==> {}'.format(cmd))
+        subprocess.call(cmd, shell=True)
+
+    def send(self, in_nr, in_dat):
+        cmd = "echo '{} {};'".format(in_nr, in_dat)
+        cmd += self.sndMsg
+        # logger.debug('==> {}'.format(cmd))
+        ret = subprocess.call(cmd, shell=True)
 
 
 def main():
+    """ where everything happens"""
+
+    # loading config (must match pure data files in the directory)
+    with open(cfg_f, 'r') as fid:
+        func_d2 = json.load(fid)
+
+    # json dic is not taking numbers as keys? converting
+    func_d = {}
+    for key in func_d2:
+        func_d[int(key)] = func_d2[key]
+
+    nr_f = len(func_d)
+
     preset = 0
     preset_old = 0
-    name_file = open ("/home/pi/Download/Git/rpieffect/names.txt")
-    names = name_file.read().splitlines()
-    logger.debug('* Effect names: {}'.format(names))
 
-    function_file = open ("/home/pi/Download/Git/rpieffect/functions.txt")
-    functions = function_file.read().splitlines()
-    logger.debug('* Functions names: {}'.format(functions))
-
-    subprocess.call("pd -nogui server.pd &", shell=True)
+    pd = PureData()
     sleep(0.2)
-    os.system("echo '0 "+ str(preset) +";' | pdsend 5000 localhost")
+    pd.send(0, preset)
+
+    # sending params on different port
+    pd_opt = PureData(False, 5001, 'udp')
 
     while True:
         sleep(.01)
         logger.info('****************************************')
-        logger.info('\t{}'.format(names[preset]))
+        logger.info('\t{}'.format(func_d[(preset) % nr_f]['name']))
         logger.info('****************************************')
-        logger.info('0 - Previous effect ({})'.format(names[preset-1]))
-        logger.info('1 - Next effect ({})'.format(names[preset+2]))
-        logger.info('2 - Config ({})'.format(names[preset]))
+        logger.info('0 - Previous effect ({})'.format(func_d[(preset-1) % nr_f]['name']))
+        logger.info('1 - Next effect ({})'.format(func_d[(preset+1) % nr_f]['name']))
+        logger.info('2 - Configure {}'.format(func_d[preset]['name']))
+        logger.info('   >  {}'.format(', '.join(func_d[preset]["func"])))
         logger.info('Else: Exit')
         logger.info('****************************************')
         inp = raw_input('?')
-        if ((inp == '0') and (preset > 0)):
+        if inp == '0':
             preset_old = preset
-            preset = preset - 1
-            os.system("echo '1 "+ str(preset_old) +";' | pdsend 5000 localhost")
-            os.system("echo '0 "+ str(preset) +";' | pdsend 5000 localhost")
-        elif ((inp == '1') and preset < len(names) - 1):
+            preset = (preset-1) % nr_f
+            pd.send(1, preset_old)
+            pd.send(0, preset)
+        elif inp == '1':
             preset_old = preset
-            preset = preset + 1
-            os.system("echo '1 "+ str(preset_old) +";' | pdsend 5000 localhost")
-            os.system("echo '0 "+ str(preset) +";' | pdsend 5000 localhost")
+            preset = (preset+1) % nr_f
+            pd.send(1, preset_old)
+            pd.send(0, preset)
         elif (inp == '2'):
             sleep(.2)
-            while True:
-                value0 = readadc(0)
-                value1 = readadc(1)
-                value2 = readadc(2)
-                value3 = readadc(3)
-                os.system("echo '3 " + str(value0) + ";' | pdsend 5001 localhost udp")
-                os.system("echo '0 " + str(value1) + ";' | pdsend 5001 localhost udp")
-                os.system("echo '1 " + str(value2) + ";' | pdsend 5001 localhost udp")
-                os.system("echo '2 " + str(value3) + ";' | pdsend 5001 localhost udp")
-                ser.write("?fE1:" + str(value3) + " E2:" + str(value2) + "?nE3:" + str(value1) + " E4:" + str(value0))
-                if (GPIO.input(4) > 0):
-                    sleep(.2)
-                    ser.write("?f" + str(names[preset]) + "?n" + str(functions[preset]))
-                    break
+            for f in func_d[preset]["func"]:
+                logger.info('* {}'.format(f))
+                val = raw_input('?')
+                idx = func_d[preset]["func"].index(f)
+                pd_opt.send((idx-1) % 4, val)
         else:
+            pd.send(1, preset)
+            sleep(0.1)
+            # super ugly
+            ret = subprocess.call('sudo killall pd', shell=True)
             sys.exit(0)
+
 
 if __name__ == '__main__':
     main()
